@@ -1,0 +1,207 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from datetime import datetime
+from typing import List, Dict, Any
+
+from app.dependencies import get_db, get_current_user, RoleRequired
+from app.models.user import User
+from app.models.student import Student, MentorAssignment
+from app.models.submission import StudentProject, StudentCertification, StudentAchievement, MentorReviewLog
+from app.services.analytics_service import recalculate_student_analytics
+from app.schemas.submission import MentorReviewRequest
+
+router = APIRouter()
+
+def get_assigned_student_ids(db: Session, mentor_id: int) -> List[int]:
+    """Helper to retrieve Student IDs assigned to a specific mentor."""
+    assignments = db.query(MentorAssignment).filter(MentorAssignment.mentor_id == mentor_id).all()
+    return [a.student_id for a in assignments]
+
+def build_unified_approval_item(item, item_type: str) -> dict:
+    """Helper to convert projects/certs/achievements to a unified approval item dictionary."""
+    # Determine display type Capitalized
+    display_type = "Project"
+    if item_type == "certification":
+        display_type = "Certification"
+    elif item_type == "achievement":
+        display_type = "Achievement"
+
+    # Handle proof links
+    proof_link = getattr(item, "proof_file", None)
+    if not proof_link:
+        proof_link = getattr(item, "certificate_link", None)
+    if not proof_link:
+        proof_link = getattr(item, "proof_link", None)
+
+    # Formatted submitted date
+    sub_date = item.created_at.date().isoformat() if item.created_at else ""
+
+    return {
+        "id": item.id,
+        "item_type": item_type,
+        "itemType": item_type,
+        "type": display_type,
+        "title": item.title,
+        "description": getattr(item, "description", ""),
+        "student_id": item.student_id,
+        "studentId": item.student_id,
+        "student_name": item.student.name if item.student else "Unknown",
+        "studentName": item.student.name if item.student else "Unknown",
+        "register_no": item.student.register_no if item.student else "",
+        "registerNo": item.student.register_no if item.student else "",
+        "status": item.status,
+        "created_at": item.created_at.isoformat() if item.created_at else "",
+        "submitted_date": sub_date,
+        "proof_link": proof_link or "",
+        "proof_file": item.proof_file or "",
+        "proofFile": item.proof_file or "",
+        "feedback": item.mentor_feedback or "",
+        "mentor_feedback": item.mentor_feedback or "",
+        "mentorFeedback": item.mentor_feedback or "",
+        "reviewed_by": item.reviewed_by,
+        "reviewed_at": item.reviewed_at.isoformat() if item.reviewed_at else None
+    }
+
+def query_submissions(db: Session, student_ids: List[int] = None, status_filter: str = None) -> List[dict]:
+    """Queries all projects, certifications, and achievements in database with filters."""
+    # Projects
+    p_query = db.query(StudentProject)
+    if student_ids is not None:
+        p_query = p_query.filter(StudentProject.student_id.in_(student_ids))
+    if status_filter:
+        p_query = p_query.filter(StudentProject.status == status_filter)
+    projects = p_query.all()
+
+    # Certs
+    c_query = db.query(StudentCertification)
+    if student_ids is not None:
+        c_query = c_query.filter(StudentCertification.student_id.in_(student_ids))
+    if status_filter:
+        c_query = c_query.filter(StudentCertification.status == status_filter)
+    certs = c_query.all()
+
+    # Achievements
+    a_query = db.query(StudentAchievement)
+    if student_ids is not None:
+        a_query = a_query.filter(StudentAchievement.student_id.in_(student_ids))
+    if status_filter:
+        a_query = a_query.filter(StudentAchievement.status == status_filter)
+    achs = a_query.all()
+
+    unified_list = []
+    for p in projects:
+        unified_list.append(build_unified_approval_item(p, "project"))
+    for c in certs:
+        unified_list.append(build_unified_approval_item(c, "certification"))
+    for a in achs:
+        unified_list.append(build_unified_approval_item(a, "achievement"))
+
+    # Sort by created_at descending
+    unified_list.sort(key=lambda x: x["created_at"], reverse=True)
+    return unified_list
+
+@router.get("/pending")
+async def get_pending_submissions(
+    current_user: User = Depends(RoleRequired(["mentor", "admin", "faculty"])),
+    db: Session = Depends(get_db)
+):
+    """Retrieves all pending submissions for assigned students (or all for demo/admin)."""
+    student_ids = None
+    if current_user.role == "mentor":
+        assigned_ids = get_assigned_student_ids(db, current_user.id)
+        # If mentor assignments exist, filter. Otherwise, return all for demo convenience.
+        if assigned_ids:
+            student_ids = assigned_ids
+
+    return query_submissions(db, student_ids=student_ids, status_filter="Pending")
+
+@router.get("/approvals")
+async def get_all_approvals(
+    current_user: User = Depends(RoleRequired(["mentor", "admin", "faculty"])),
+    db: Session = Depends(get_db)
+):
+    """Retrieves all submissions (all states) for assigned students (or all for admin)."""
+    student_ids = None
+    if current_user.role == "mentor":
+        assigned_ids = get_assigned_student_ids(db, current_user.id)
+        if assigned_ids:
+            student_ids = assigned_ids
+
+    return query_submissions(db, student_ids=student_ids)
+
+@router.put("/review")
+async def review_submission(
+    payload: MentorReviewRequest,
+    current_user: User = Depends(RoleRequired(["mentor", "admin"])),
+    db: Session = Depends(get_db)
+):
+    """Approves, rejects, or requests corrections on a specific student submission."""
+    status_val = payload.status
+    if status_val not in ["Approved", "Rejected", "Correction Required"]:
+        raise HTTPException(status_code=400, detail=f"Invalid review status: '{status_val}'")
+
+    # Normalize item_type
+    raw_type = str(payload.item_type or payload.itemType or "").lower().strip()
+    
+    if raw_type and raw_type not in ["project", "projects", "certification", "certifications", "achievement", "achievements"]:
+        raise HTTPException(status_code=400, detail=f"Invalid submission type: '{raw_type}'")
+        
+    # Resolve project/certification/achievement target
+    item = None
+    item_type_norm = None
+    
+    # We search by matching type
+    if raw_type in ["project", "projects"]:
+        item = db.query(StudentProject).filter(StudentProject.id == payload.id).first()
+        item_type_norm = "project"
+    elif raw_type in ["certification", "certifications"]:
+        item = db.query(StudentCertification).filter(StudentCertification.id == payload.id).first()
+        item_type_norm = "certification"
+    elif raw_type in ["achievement", "achievements"]:
+        item = db.query(StudentAchievement).filter(StudentAchievement.id == payload.id).first()
+        item_type_norm = "achievement"
+    else:
+        # Fallback search across all three tables if no type was provided (legacy frontend calls)
+        item = db.query(StudentProject).filter(StudentProject.id == payload.id).first()
+        if item:
+            item_type_norm = "project"
+        else:
+            item = db.query(StudentCertification).filter(StudentCertification.id == payload.id).first()
+            if item:
+                item_type_norm = "certification"
+            else:
+                item = db.query(StudentAchievement).filter(StudentAchievement.id == payload.id).first()
+                if item:
+                    item_type_norm = "achievement"
+
+    if not item:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"Submission with ID {payload.id} not found."
+        )
+
+    # 1. Update review properties
+    item.status = status_val
+    item.mentor_feedback = payload.feedback or ""
+    item.reviewed_by = current_user.id
+    item.reviewed_at = datetime.utcnow()
+
+    # 2. Insert MentorReviewLog
+    log = MentorReviewLog(
+        item_type=item_type_norm,
+        item_id=item.id,
+        student_id=item.student_id,
+        mentor_id=current_user.id,
+        status=status_val,
+        feedback=payload.feedback or ""
+    )
+    db.add(log)
+    db.flush()
+
+    # 3. Recalculate StudentAnalytics (placement readiness score changes based on approved counts)
+    recalculate_student_analytics(db, item.student_id)
+
+    db.commit()
+    db.refresh(item)
+
+    return build_unified_approval_item(item, item_type_norm)
