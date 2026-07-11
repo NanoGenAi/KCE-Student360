@@ -1,0 +1,310 @@
+export const mockStudents = [
+  {
+    id: "1",
+    register_no: "22AD001",
+    name: "Shahul",
+    email: "shahul@student360.com",
+    department: "Artificial Intelligence and Data Science",
+    year: 3,
+    section: "A",
+    overall_score: 96.5,
+    strongest_domain: "FullStack",
+    weakest_domain: "DBMS",
+    profile_image: "/leaderboard/shahul.jpeg",
+    domain_scores: {
+      DSA: 95,
+      DBMS: 89,
+      FullStack: 98,
+      Aptitude: 92,
+      Coding: 96,
+      Academic: 94,
+      Technical: 97
+    },
+    projects: [
+      {
+        id: "p1",
+        title: "E-Commerce Cloud Platform",
+        description: "A serverless e-commerce platform built using React, Node.js, and AWS.",
+        role: "Frontend Lead",
+        tech_stack: ["React", "Tailwind CSS", "Node.js", "AWS"],
+        github_link: "https://github.com/shahul/ecommerce-cloud",
+        live_link: "https://ecommerce-cloud.demo.com",
+        status: "Approved"
+      },
+      {
+        id: "p2",
+        title: "Automated Portfolio Builder",
+        description: "AI-powered tool that automatically generates portfolios for college students.",
+        role: "Full Stack Developer",
+        tech_stack: ["React", "Express", "PostgreSQL", "Gemini API"],
+        github_link: "https://github.com/shahul/portfolio-builder",
+        live_link: "https://portfolio-builder.demo.com",
+        status: "Pending"
+      }
+    ],
+    certifications: [
+      {
+        id: "c1",
+        title: "AWS Certified Developer - Associate",
+        issuer: "Amazon Web Services",
+        issue_date: "2025-05-15",
+        verification_link: "https://aws.verification.com/cert/12345",
+        status: "Pending"
+      },
+      {
+        id: "c2",
+        title: "Meta Front-End Developer Professional Certificate",
+        issuer: "Meta (Coursera)",
+        issue_date: "2024-11-20",
+        verification_link: "https://coursera.org/verify/meta-fed-123",
+        status: "Approved"
+      }
+    ],
+    achievements: [
+      {
+        id: "a1",
+        title: "Smart India Hackathon 2025 Winner",
+        description: "First prize in the Ministry of Education category for building a decentralized academic document verification system.",
+        date: "2025-02-18",
+        proof_link: "https://sih.gov.in/winner-list-2025",
+        status: "Approved"
+      },
+      {
+        id: "a2",
+        title: "LeetCode 500+ Badges",
+        description: "Solved over 500 coding questions on LeetCode with a peak rating of 1850.",
+        date: "2025-06-01",
+        proof_link: "https://leetcode.com/shahul",
+        status: "Pending"
+      }
+    ],
+    portfolio_url: "/portfolio/22AD001"
+  },
+  {
+    id: "2",
+    register_no: "22AD002",
+    name: "Rachith",
+    email: "rachith@student360.com",
+    department: "Information Technology",
+    year: 3,
+    section: "A",
+    overall_score: 94.8,
+    strongest_domain: "DSA",
+    weakest_domain: "Aptitude",
+    profile_image: "/leaderboard/rachith.png",
+    domain_scores: {
+      DSA: 98,
+      DBMS: 91,
+      FullStack: 94,
+      Aptitude: 88,
+      Coding: 95,
+      Academic: 93,
+      Technical: 94
+    },
+    projects: [],
+    certifications: [],
+    achievements: [],
+    portfolio_url: "/portfolio/22AD002"
+  },
+  {
+    id: "3",
+    register_no: "22AD003",
+    name: "Padma Kumar",
+    email: "padmakumar@student360.com",
+    department: "Computer Science",
+    year: 3,
+    section: "B",
+    overall_score: 93.2,
+    strongest_domain: "Technical",
+    weakest_domain: "Academic",
+    profile_image: "/leaderboard/padma-kumar.png",
+    domain_scores: {
+      DSA: 92,
+      DBMS: 94,
+      FullStack: 91,
+      Aptitude: 90,
+      Coding: 93,
+      Academic: 89,
+      Technical: 98
+    },
+    projects: [],
+    certifications: [],
+    achievements: [],
+    portfolio_url: "/portfolio/22AD003"
+  },
+  {
+    id: "4",
+    register_no: "21IT004",
+    name: "Karthik",
+    email: "karthik@student360.com",
+    department: "Computer Science",
+    year: 3,
+    section: "B",
+    overall_score: 79.8,
+    strongest_domain: "Coding",
+    weakest_domain: "Academic",
+    domain_scores: {
+      DSA: 84,
+      DBMS: 99,
+      FullStack: 75,
+      Aptitude: 82,
+      Coding: 88,
+      Academic: 72,
+      Technical: 80
+    },
+    projects: [],
+    certifications: [],
+    achievements: [],
+    portfolio_url: "http://localhost:5173/portfolio/21IT004"
+  },
+  {
+    id: "5",
+    register_no: "21IT005",
+    name: "Ayesha",
+    email: "ayesha@student360.com",
+    department: "Information Technology",
+    year: 3,
+    section: "B",
+    overall_score: 86.4,
+    strongest_domain: "Aptitude",
+    weakest_domain: "DSA",
+    domain_scores: {
+      DSA: 74,
+      DBMS: 85,
+      FullStack: 88,
+      Aptitude: 94,
+      Coding: 80,
+      Academic: 90,
+      Technical: 94
+    },
+    projects: [],
+    certifications: [],
+    achievements: [],
+    portfolio_url: "http://localhost:5173/portfolio/21IT005"
+  },
+  {
+    id: "6",
+    register_no: "21IT006",
+    name: "Rahul",
+    email: "rahul@student360.com",
+    department: "Computer Science",
+    year: 3,
+    section: "A",
+    overall_score: 74.5,
+    strongest_domain: "Academic",
+    weakest_domain: "Coding",
+    domain_scores: {
+      DSA: 70,
+      DBMS: 76,
+      FullStack: 72,
+      Aptitude: 78,
+      Coding: 68,
+      Academic: 82,
+      Technical: 75
+    },
+    projects: [],
+    certifications: [],
+    achievements: [],
+    portfolio_url: "http://localhost:5173/portfolio/21IT006"
+  },
+  {
+    id: "7",
+    register_no: "21IT007",
+    name: "Naveen",
+    email: "naveen@student360.com",
+    department: "Information Technology",
+    year: 3,
+    section: "A",
+    overall_score: 80.1,
+    strongest_domain: "Technical",
+    weakest_domain: "DBMS",
+    domain_scores: {
+      DSA: 80,
+      DBMS: 72,
+      FullStack: 82,
+      Aptitude: 80,
+      Coding: 81,
+      Academic: 80,
+      Technical: 86
+    },
+    projects: [],
+    certifications: [],
+    achievements: [],
+    portfolio_url: "http://localhost:5173/portfolio/21IT007"
+  },
+  {
+    id: "8",
+    register_no: "21IT008",
+    name: "Meera",
+    email: "meera@student360.com",
+    department: "Computer Science",
+    year: 3,
+    section: "A",
+    overall_score: 89.0,
+    strongest_domain: "Academic",
+    weakest_domain: "DBMS",
+    domain_scores: {
+      DSA: 87,
+      DBMS: 97,
+      FullStack: 88,
+      Aptitude: 90,
+      Coding: 89,
+      Academic: 96,
+      Technical: 93
+    },
+    projects: [],
+    certifications: [],
+    achievements: [],
+    portfolio_url: "http://localhost:5173/portfolio/21IT008"
+  },
+  {
+    id: "9",
+    register_no: "21IT009",
+    name: "Sanjay",
+    email: "sanjay@student360.com",
+    department: "Computer Science",
+    year: 3,
+    section: "B",
+    overall_score: 84.8,
+    strongest_domain: "Technical",
+    weakest_domain: "FullStack",
+    domain_scores: {
+      DSA: 86,
+      DBMS: 96,
+      FullStack: 78,
+      Aptitude: 85,
+      Coding: 85,
+      Academic: 87,
+      Technical: 88
+    },
+    projects: [],
+    certifications: [],
+    achievements: [],
+    portfolio_url: "http://localhost:5173/portfolio/21IT009"
+  },
+  {
+    id: "10",
+    register_no: "21IT010",
+    name: "Farhan",
+    email: "farhan@student360.com",
+    department: "Information Technology",
+    year: 3,
+    section: "B",
+    overall_score: 87.9,
+    strongest_domain: "Coding",
+    weakest_domain: "DBMS",
+    domain_scores: {
+      DSA: 89,
+      DBMS: 78,
+      FullStack: 88,
+      Aptitude: 88,
+      Coding: 94,
+      Academic: 85,
+      Technical: 93
+    },
+    projects: [],
+    certifications: [],
+    achievements: [],
+    portfolio_url: "http://localhost:5173/portfolio/21IT010"
+  }
+];
